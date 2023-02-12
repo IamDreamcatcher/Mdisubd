@@ -3,25 +3,27 @@ CREATE TABLE MyTable
     id    NUMBER UNIQUE,
     value NUMBER
 );
--------------
+
 SELECT *
 FROM MyTable;
------------
+
+DROP TABLE MyTable;
+
 DECLARE
-    v_id NUMBER := 1;
-    v_val NUMBER;
+    cur_id NUMBER := 1;
+    cur_val NUMBER;
 BEGIN
-    WHILE v_id <= 10000 LOOP
-        v_val := dbms_random.RANDOM();
+    WHILE cur_id <= 10 LOOP
+        cur_val := dbms_random.RANDOM();
         INSERT INTO MyTable (id, value)
-        VALUES (v_id, v_val);
-        v_id := v_id + 1;
+        VALUES (cur_id, cur_val);
+        cur_id := cur_id + 1;
     END LOOP;
 END;
-----------
+
 CREATE OR REPLACE FUNCTION is_even_more_than_odd
     RETURN VARCHAR2
-    AS
+    IS
     even_count NUMBER := 0;
     odd_count NUMBER := 0;
     cur_numb NUMBER := 0;
@@ -46,33 +48,36 @@ END;
 BEGIN
     DBMS_OUTPUT.put_line(is_even_more_than_odd());
 END;
--------
-CREATE OR REPLACE FUNCTION custom_insert(id NUMBER)
+--insert has been changed
+CREATE OR REPLACE FUNCTION custom_insert(in_id NUMBER)
     RETURN VARCHAR2
-    AS
-    l_id VARCHAR2(15);
-    l_val VARCHAR2(15);
+    IS
+    out_id VARCHAR2(15);
+    out_val VARCHAR2(15);
 BEGIN
-    l_id := TO_CHAR(id);
-    l_val := TO_CHAR(dbms_random.RANDOM());
-    RETURN 'INSERT INTO MyTable (id, value) VALUES (' || l_id || ', ' || l_val || ');';
+    FOR i in (SELECT * FROM MyTable WHERE id = in_id) LOOP
+        out_id := TO_CHAR(i.id);
+        out_val := TO_CHAR(i.value);
+        RETURN 'INSERT INTO MyTable (id, value) VALUES (' || out_id || ', ' || out_val || ');';
+    end loop;
+    RETURN 'Id not exists';
 END;
 BEGIN
-    DBMS_OUTPUT.put_line(custom_insert(1));
+    DBMS_OUTPUT.put_line(custom_insert(-300));
 END;
-----------
-CREATE OR REPLACE PROCEDURE insert_into_mytable(new_id NUMBER, new_value NUMBER) AS
+
+CREATE OR REPLACE PROCEDURE insert_into_mytable(new_id NUMBER, new_value NUMBER) IS
 BEGIN
   INSERT INTO MyTable (id, value)
   VALUES (new_id, new_value);
 END;
-CREATE OR REPLACE PROCEDURE update_mytable(in_id NUMBER, new_value NUMBER) AS
+CREATE OR REPLACE PROCEDURE update_mytable(in_id NUMBER, new_value NUMBER) IS
 BEGIN
   UPDATE MyTable
   SET value = new_value
   WHERE id = in_id;
 END;
-CREATE OR REPLACE PROCEDURE delete_from_mytable(in_id NUMBER) AS
+CREATE OR REPLACE PROCEDURE delete_from_mytable(in_id NUMBER) IS
 BEGIN
   DELETE FROM MyTable
   WHERE id = in_id;
@@ -82,10 +87,10 @@ BEGIN
     update_mytable(2, 2);
     delete_from_mytable(3);
 END;
-------------
+
 CREATE OR REPLACE FUNCTION calculate_total(monthly_salary NUMBER, bonus_percentage NUMBER)
 RETURN VARCHAR2
-AS
+IS
 BEGIN
     IF bonus_percentage < 0 OR bonus_percentage > 100  THEN
         RETURN 'Bonus percentage is wrong';
@@ -102,4 +107,7 @@ DECLARE
 BEGIN
   result := calculate_total(monthly_salary, bonus_percentage);
   DBMS_OUTPUT.put_line('Result: ' || result);
+  EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.put_line('Invalid input');
 END;
