@@ -11,17 +11,19 @@ CREATE TABLE Groups(
      name VARCHAR2(100),
      students_cnt NUMBER
 );
+DROP TABLE Students;
+DROP TABLE Logging;
 --Testing triggers
 DELETE FROM Students where id = 85;
-DELETE FROM Groups where id = 42;
+DELETE FROM Groups where id = 62;
 
-INSERT INTO Groups (name, students_cnt) VALUES ('174002', 0);
+INSERT INTO Groups (name, students_cnt) VALUES ('123456', 0);
 INSERT INTO Groups (name, students_cnt) VALUES ('231451', 0);
 
-INSERT INTO Students (name, group_id) VALUES ('Qqqqq', 42);
-INSERT INTO Students (name, group_id) VALUES ('Eeeeee', 43);
-INSERT INTO Students (name, group_id) VALUES ('Wwwww', 2);
-INSERT INTO Students (name, group_id) VALUES ('Ssssss', 3);
+INSERT INTO Students (name, group_id) VALUES ('Qqqqq', 63);
+INSERT INTO Students (name, group_id) VALUES ('Eeeeee', 62);
+INSERT INTO Students (name, group_id) VALUES ('Wwwww', 63);
+INSERT INTO Students (name, group_id) VALUES ('Ssssss', 63);
 
 UPDATE students SET group_id=43 WHERE name='Qqqqq';
 
@@ -68,6 +70,8 @@ BEFORE INSERT ON Students
 FOR EACH ROW
 DECLARE
     cnt NUMBER;
+    --id_taken EXCEPTION;
+    --raise id_taken;
 BEGIN
     SELECT COUNT(*) INTO cnt FROM Students WHERE ID = :new.id;
     IF cnt > 0 THEN
@@ -112,6 +116,7 @@ CREATE TABLE Logging(
 CREATE SEQUENCE logging_sequence_id
 START WITH 1;
 --Trigger that implements logging of all actions on the data of the Students table
+--to do: add 'IS NULL' check
 CREATE OR REPLACE TRIGGER students_logging
 AFTER INSERT OR UPDATE OR DELETE ON Students
 FOR EACH ROW
@@ -150,7 +155,7 @@ END;
 SELECT *
 FROM Logging;
 BEGIN
-    restore_information(TO_TIMESTAMP('20.02.2023 14:46:20'));
+    restore_information(TO_TIMESTAMP('24.02.2023 18:24:41'));
     --restore_information(TO_TIMESTAMP(CURRENT_TIMESTAMP - 10));
 END;
 --Sixth one
