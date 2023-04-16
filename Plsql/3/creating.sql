@@ -4,7 +4,7 @@ CREATE USER prod IDENTIFIED BY password;
 GRANT ALL PRIVILEGES TO dev;
 GRANT ALL PRIVILEGES TO prod;
 
---Creating data for schemas
+--Creating tables
 CREATE TABLE dev.smth1
 (
     id         NUMBER       not null,
@@ -66,7 +66,7 @@ CREATE TABLE dev.cycled
     CONSTRAINT pk PRIMARY KEY (id),
     CONSTRAINT fk FOREIGN KEY (id) REFERENCES dev.cycled (id)
 );
-
+--functions
 CREATE OR REPLACE Function dev.FU1(a in VARCHAR2)
     return NUMBER
     IS
@@ -75,9 +75,11 @@ BEGIN
     RETURN 5;
 END;
 
+--index
 CREATE INDEX dev.some_index
 ON dev.smth1(some_field);
 
+--procedures
 CREATE OR REPLACE PROCEDURE DEV.proc1(a VARCHAR2)
 IS
 BEGIN
@@ -116,4 +118,19 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE(a);
 END;
 
+--data for creating tables in shames
+CREATE TABLE ddl_table
+(
+    table_name VARCHAR2(100),
+    ddl_script VARCHAR2(3000),
+    type       VARCHAR2(100),
+    priority   NUMBER(10) DEFAULT 100000
+);
+
+CREATE TABLE fk_table
+(
+    id     NUMBER,
+    child  VARCHAR2(100),
+    parent VARCHAR2(100)
+);
 

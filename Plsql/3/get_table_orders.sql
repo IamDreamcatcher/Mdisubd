@@ -1,3 +1,4 @@
+--get tables orders
 create or replace procedure GET_TABLES_ORDER(schema_name in varchar2) as
 begin
     EXECUTE IMMEDIATE 'TRUNCATE TABLE fk_table';

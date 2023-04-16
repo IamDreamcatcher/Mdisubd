@@ -1,3 +1,4 @@
+--tables compare
 CREATE OR REPLACE PROCEDURE PROD_CREATE_LIST(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
     IS
     counter    NUMBER(10);
