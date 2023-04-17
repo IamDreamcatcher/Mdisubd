@@ -1,5 +1,5 @@
 --tables compare
-CREATE OR REPLACE PROCEDURE PROD_CREATE_LIST(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
+CREATE OR REPLACE PROCEDURE CREATING_TABLES(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
     IS
     counter    NUMBER(10);
     ddl_script VARCHAR2(3000);
@@ -42,7 +42,7 @@ BEGIN
 END;
 
 
-CREATE OR REPLACE PROCEDURE PROD_DELETE_LIST(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
+CREATE OR REPLACE PROCEDURE DELETING_TABLES(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
     IS
     counter    NUMBER(10);
     counter2   NUMBER(10);
@@ -93,5 +93,5 @@ BEGIN
         END LOOP;
 END;
 
-CALL PROD_CREATE_LIST('DEV', 'PROD');
-CALL PROD_DELETE_LIST('DEV', 'PROD');
+CALL CREATING_TABLES('DEV', 'PROD');
+CALL DELETING_TABLES('DEV', 'PROD');

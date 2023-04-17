@@ -1,5 +1,5 @@
 --procedures compare
-CREATE OR REPLACE PROCEDURE PROD_PROCEDURE_CREATE(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
+CREATE OR REPLACE PROCEDURE CREATING_PROCEDURES(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
     AUTHID CURRENT_USER
     IS
     counter NUMBER(10);
@@ -26,15 +26,15 @@ BEGIN
                         DBMS_OUTPUT.PUT_LINE(RTRIM(res2.text, CHR(10) || CHR(13)));
                     ELSE
                         DBMS_OUTPUT.PUT_LINE(RTRIM(
-                                REPLACE('PROCEDURE ' || prod_schema_name || '.' || SUBSTR(res2.text, 10), ' ', ''),
-                                CHR(10) || CHR(13)));
+                                    'PROCEDURE ' || prod_schema_name || '.' || SUBSTR(res2.text, 15),
+                                    CHR(10) || CHR(13)));
                         counter := 1;
                     END IF;
                 END LOOP;
         END LOOP;
 END;
 
-CREATE OR REPLACE PROCEDURE PROD_PROCEDURE_DELETE(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
+CREATE OR REPLACE PROCEDURE DELETING_PROCEDURES(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
     AUTHID CURRENT_USER
     IS
 BEGIN
@@ -49,7 +49,7 @@ BEGIN
         END LOOP;
 END;
 
-CREATE OR REPLACE PROCEDURE PROD_PROCEDURE_DELETE_CREATE(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
+CREATE OR REPLACE PROCEDURE UPDATING_PROCEDURES(dev_schema_name VARCHAR2, prod_schema_name VARCHAR2)
     AUTHID CURRENT_USER
     IS
     counter NUMBER(10);
@@ -76,8 +76,8 @@ BEGIN
                         DBMS_OUTPUT.PUT_LINE(RTRIM(body.text, CHR(10) || CHR(13)));
                     ELSE
                         DBMS_OUTPUT.PUT_LINE(RTRIM(
-                                REPLACE('PROCEDURE ' || prod_schema_name || '.' || SUBSTR(body.text, 10), ' ', ''),
-                                CHR(10) || CHR(13)));
+                                    'PROCEDURE ' || prod_schema_name || '.' || SUBSTR(body.text, 15),
+                                    CHR(10) || CHR(13)));
                         counter := 1;
                     END IF;
                 END LOOP;

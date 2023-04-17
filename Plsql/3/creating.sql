@@ -1,121 +1,122 @@
 --Creating dev and prod schemas
-CREATE USER dev IDENTIFIED BY password;
-CREATE USER prod IDENTIFIED BY password;
+alter session set "_ORACLE_SCRIPT"=true;
+CREATE USER dev IDENTIFIED BY qwertyu;
+CREATE USER prod IDENTIFIED BY qwertyu;
 GRANT ALL PRIVILEGES TO dev;
 GRANT ALL PRIVILEGES TO prod;
 
 --Creating tables
-CREATE TABLE dev.smth1
+CREATE TABLE dev.first
 (
-    id         NUMBER       not null,
-    some_field VARCHAR2(59) not null,
-    CONSTRAINT smth1_pk PRIMARY KEY (id)
+    id NUMBER not null,
+    first VARCHAR2(44) not null,
+    CONSTRAINT first_pk PRIMARY KEY (id)
 );
 
-CREATE TABLE dev.smth2
+CREATE TABLE dev.second
 (
-    id         NUMBER(10)   not null,
-    some_field VARCHAR2(59) not null,
-    CONSTRAINT smth2_pk PRIMARY KEY (id)
+    id NUMBER(11) not null,
+    second VARCHAR2(44) not null,
+    CONSTRAINT second_pk PRIMARY KEY (id)
 );
 
-CREATE TABLE prod.smth1
+CREATE TABLE prod.first
 (
-    id            NUMBER       not null,
-    some_field    VARCHAR2(59) not null,
-    another_field VARCHAR2(59),
-    CONSTRAINT smth1_pk PRIMARY KEY (id)
+    id NUMBER not null,
+    first VARCHAR2(44) not null,
+    first2 VARCHAR2(44),
+    CONSTRAINT first_pk PRIMARY KEY (id)
 );
 
-CREATE TABLE prod.smth3
+CREATE TABLE prod.third
 (
-    id         NUMBER       not null,
-    some_field VARCHAR2(59) not null,
-    CONSTRAINT smth3_pk PRIMARY KEY (id)
+    id NUMBER not null,
+    third VARCHAR2(44) not null,
+    CONSTRAINT third_pk PRIMARY KEY (id)
+);
+--Creating tables with references
+CREATE TABLE dev.third_ref
+(
+    id NUMBER not null,
+    third_ref VARCHAR2(44) not null,
+    CONSTRAINT third_ref_pk PRIMARY KEY (id)
 );
 
-CREATE TABLE dev.three
+CREATE TABLE dev.second_ref
 (
-    id         NUMBER       not null,
-    some_field VARCHAR2(59) not null,
-    CONSTRAINT three_pk PRIMARY KEY (id)
+    id NUMBER(11) not null,
+    fk_id NUMBER(11) not null,
+    second_ref VARCHAR2(44) not null,
+    CONSTRAINT second_ref_pk PRIMARY KEY (id),
+    CONSTRAINT second_ref_fk FOREIGN KEY (fk_id) REFERENCES dev.third_ref(id)
 );
 
-CREATE TABLE dev.two
+CREATE TABLE dev.first_ref
 (
-    id         NUMBER(10)   not null,
-    id_2 NUMBER(10) not null,
-    some_field VARCHAR2(59) not null,
-    CONSTRAINT two_pk PRIMARY KEY (id),
-    CONSTRAINT two_fk FOREIGN KEY (id_2) REFERENCES dev.three(id)
+    id NUMBER(11) not null,
+    fk_id NUMBER(11) not null,
+    first_ref VARCHAR2(44) not null,
+    CONSTRAINT first_ref_pk PRIMARY KEY (id),
+    CONSTRAINT first_ref_fk FOREIGN KEY (fk_id) REFERENCES dev.second_ref(id)
 );
-
-CREATE TABLE dev.one
-(
-    id         NUMBER(10)   not null,
-    id_2 NUMBER(10) not null,
-    some_field VARCHAR2(59) not null,
-    CONSTRAINT one_pk PRIMARY KEY (id),
-    CONSTRAINT one_fk FOREIGN KEY (id_2) REFERENCES dev.two(id)
-);
-
+--Creating table with cycle
 CREATE TABLE dev.cycled
 (
-    id NUMBER(10) not null,
-
+    id NUMBER(11) not null,
+    fk_id NUMBER(11) not null,
     CONSTRAINT pk PRIMARY KEY (id),
-    CONSTRAINT fk FOREIGN KEY (id) REFERENCES dev.cycled (id)
+    CONSTRAINT fk FOREIGN KEY (fk_id) REFERENCES dev.cycled(id)
 );
 --functions
-CREATE OR REPLACE Function dev.FU1(a in VARCHAR2)
+CREATE OR REPLACE Function dev.func_example(variable in VARCHAR2)
     return NUMBER
     IS
 BEGIN
-    DBMS_OUTPUT.PUT_LINE(a);
-    RETURN 5;
+    DBMS_OUTPUT.PUT_LINE(variable);
+    RETURN 11;
 END;
 
 --index
-CREATE INDEX dev.some_index
-ON dev.smth1(some_field);
+CREATE INDEX dev.index_example
+ON dev.first(first);
 
 --procedures
-CREATE OR REPLACE PROCEDURE DEV.proc1(a VARCHAR2)
+CREATE OR REPLACE PROCEDURE DEV.proc_example_first(variable VARCHAR2)
 IS
 BEGIN
-    DBMS_OUTPUT.PUT_LINE(a);
+    DBMS_OUTPUT.PUT_LINE(variable);
 END;
 
-CREATE OR REPLACE PROCEDURE PROD.proc1(a VARCHAR2)
+CREATE OR REPLACE PROCEDURE PROD.proc_example_first(variable VARCHAR2)
 IS
 BEGIN
-    DBMS_OUTPUT.PUT_LINE(a);
+    DBMS_OUTPUT.PUT_LINE(variable);
 END;
 
 
-CREATE OR REPLACE PROCEDURE DEV.proc2(a VARCHAR2)
+CREATE OR REPLACE PROCEDURE DEV.proc_example_second(variable VARCHAR2)
 IS
 BEGIN
-    DBMS_OUTPUT.PUT_LINE(a);
+    DBMS_OUTPUT.PUT_LINE(variable);
 END;
 
-CREATE OR REPLACE PROCEDURE PROD.proc2(a VARCHAR2)
+CREATE OR REPLACE PROCEDURE PROD.proc_example_second(variable VARCHAR2)
 IS
 BEGIN
-    DBMS_OUTPUT.PUT_LINE(a);
-    DBMS_OUTPUT.PUT_LINE(a);
+    DBMS_OUTPUT.PUT_LINE(variable);
+    DBMS_OUTPUT.PUT_LINE(variable);
 END;
 
-CREATE OR REPLACE PROCEDURE DEV.proc3(a VARCHAR2)
+CREATE OR REPLACE PROCEDURE DEV.proc_example_third(variable VARCHAR2)
 IS
 BEGIN
-    DBMS_OUTPUT.PUT_LINE(a);
+    DBMS_OUTPUT.PUT_LINE(variable);
 END;
 
-CREATE OR REPLACE PROCEDURE PROD.proc4(a VARCHAR2)
+CREATE OR REPLACE PROCEDURE PROD.proc_example_fourth(variable VARCHAR2)
 IS
 BEGIN
-    DBMS_OUTPUT.PUT_LINE(a);
+    DBMS_OUTPUT.PUT_LINE(variable);
 END;
 
 --data for creating tables in shames
