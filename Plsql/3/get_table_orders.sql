@@ -2,7 +2,7 @@
 create or replace procedure GET_TABLES_ORDER(schema_name in varchar2) as
 begin
     EXECUTE IMMEDIATE 'TRUNCATE TABLE fk_table';
-    dbms_output.put_line('Showing tables order in schema');
+    dbms_output.put_line('Correct order of tables');
 
     FOR schema_table IN (SELECT tables1.table_name name
                          FROM all_tables tables1

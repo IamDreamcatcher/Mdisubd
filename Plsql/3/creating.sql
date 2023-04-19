@@ -13,6 +13,7 @@ CREATE TABLE dev.first
     CONSTRAINT first_pk PRIMARY KEY (id)
 );
 
+
 CREATE TABLE dev.second
 (
     id NUMBER(11) not null,
@@ -59,6 +60,24 @@ CREATE TABLE dev.first_ref
     CONSTRAINT first_ref_pk PRIMARY KEY (id),
     CONSTRAINT first_ref_fk FOREIGN KEY (fk_id) REFERENCES dev.second_ref(id)
 );
+
+CREATE TABLE dev.t1(
+  id NUMBER NOT NULL PRIMARY KEY,
+  reference NUMBER
+);
+
+CREATE TABLE dev.t2(
+  id NUMBER NOT NULL PRIMARY KEY,
+  reference NUMBER
+);
+
+CREATE TABLE dev.t3(
+  id NUMBER NOT NULL PRIMARY KEY,
+  reference NUMBER
+);
+
+ALTER TABLE t2 ADD CONSTRAINT fk_to_t1 FOREIGN KEY(reference) REFERENCES t1(id);
+ALTER TABLE t1 ADD CONSTRAINT fk_to_t3 FOREIGN KEY(reference) REFERENCES t3(id);
 --Creating table with cycle
 CREATE TABLE dev.cycled
 (
