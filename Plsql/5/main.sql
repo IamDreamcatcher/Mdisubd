@@ -54,7 +54,7 @@ from reports_history;
 call rollback_by_date(to_timestamp('2023-04-29 10:00:00', 'YYYY-MM-DD HH24:MI:SS'));
 call rollback_by_date(to_timestamp('2023-05-01 23:30:40', 'YYYY-MM-DD HH24:MI:SS'));
 call FUNC_PACKAGE.ROLL_BACK(100000);
-call FUNC_PACKAGE.ROLL_BACK(to_timestamp('2023-04-24 19:25:00', 'YYYY-MM-DD HH24:MI:SS'));
+call FUNC_PACKAGE.ROLL_BACK(to_timestamp('2023-05-05 13:44:50', 'YYYY-MM-DD HH24:MI:SS'));
 call FUNC_PACKAGE.REPORT();
 call FUNC_PACKAGE.REPORT(to_timestamp('2023-04-29 10:00:00', 'YYYY-MM-DD HH24:MI:SS'),
                          to_timestamp('2024-05-02 23:30:40', 'YYYY-MM-DD HH24:MI:SS'));

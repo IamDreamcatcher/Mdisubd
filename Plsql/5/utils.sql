@@ -91,8 +91,36 @@ as
     d_count  number;
     my_file  UTL_FILE.FILE_TYPE;
 begin
-
-    v_result := '<h1>actors:</h1>' || CHR(10);
+    v_result :=
+    '<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Database Changes</title>
+        <style type="text/css">
+            h1 {
+                font-size: 24px;
+                font-weight: bold;
+                margin-top: 20px;
+                margin-bottom: 10px;
+                text-align: center;
+                text-transform: uppercase;
+            }
+            h2 {
+                font-size: 18px;
+                margin-top: 5px;
+                text-align: center;
+                margin-bottom: 5px;
+            }
+            .magenta {
+                color: magenta;
+            }
+            .darkorange {
+                color: darkorange;
+            }
+        </style>
+    </head>
+    <body>';
+    v_result := v_result || '<h1 class = "darkorange">Table Actors:</h1>' || CHR(10);
 
     select count(*)
     into u_count
@@ -115,9 +143,9 @@ begin
     i_count := i_count - u_count;
     d_count := d_count - u_count;
 
-    v_result := v_result || '<h2 style="color:green">   Insert: ' || i_count || '</h2>' || CHR(10) ||
-                '<h2 style="color:orange">   Update: ' || u_count || '</h2>' || CHR(10) ||
-                '<h2 style="color:red">   Delete: ' || d_count || '</h2>' || CHR(10);
+    v_result := v_result || '<h2 class="magenta">   Insert operations amount: ' || i_count || '</h2>' || CHR(10) ||
+                '<h2 class="magenta">   Update operations amount: ' || u_count || '</h2>' || CHR(10) ||
+                '<h2 class="magenta">   Delete operations amount: ' || d_count || '</h2>' || CHR(10);
 
     select count(*)
     into u_count
@@ -140,10 +168,10 @@ begin
     i_count := i_count - u_count;
     d_count := d_count - u_count;
 
-    v_result := v_result || '<h1>producers:</h1>' || CHR(10) ||
-                '<h2 style="color:green">   Insert: ' || i_count || '</h2>' || CHR(10) ||
-                '<h2 style="color:orange">   Update: ' || u_count || '</h2>' || CHR(10) ||
-                '<h2 style="color:red">   Delete: ' || d_count || '</h2>' || CHR(10);
+    v_result := v_result || '<h1 class="darkorange">Table Producers:</h1>' || CHR(10) ||
+                '<h2 class="magenta">   Insert operations amount: ' || i_count || '</h2>' || CHR(10) ||
+                '<h2 class="magenta">  Update operations amount: ' || u_count || '</h2>' || CHR(10) ||
+                '<h2 class="magenta">   Delete operations amount: ' || d_count || '</h2>' || CHR(10);
 
     select count(*)
     into u_count
@@ -166,10 +194,11 @@ begin
     i_count := i_count - u_count;
     d_count := d_count - u_count;
 
-    v_result := v_result || '<h1>films:</h1>' || CHR(10) ||
-                '<h2 style="color:green">   Insert: ' || i_count || '</h2>' || CHR(10) ||
-                '<h2 style="color:orange">   Update: ' || u_count || '</h2>' || CHR(10) ||
-                '<h2 style="color:red">   Delete: ' || d_count || '</h2>' || CHR(10);
+    v_result := v_result || '<h1 class="darkorange">Table films:</h1>' || CHR(10) ||
+                '<h2 class="magenta">  Insert operations amount: ' || i_count || '</h2>' || CHR(10) ||
+                '<h2 class="magenta">   Update operations amount: ' || u_count || '</h2>' || CHR(10) ||
+                '<h2 class="magenta">   Delete operations amount: ' || d_count || '</h2>' || CHR(10);
+    v_result := v_result || '</body></html>';
     my_file := UTL_FILE.FOPEN('MY_DIR', 'report.html', 'w');
     UTL_FILE.PUT_LINE(my_file, v_result);
     UTL_FILE.FCLOSE(my_file);
