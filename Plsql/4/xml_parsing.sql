@@ -12,91 +12,148 @@ END XML_PARSING;
 
 CREATE OR REPLACE PACKAGE BODY XML_PARSING AS
     FUNCTION HANDLER_OPERATOR(XML_STRING IN VARCHAR2) RETURN VARCHAR2 IS
-        TABLES_LIST    XML_DATA := XML_DATA();
-        IN_COLUMNS     XML_DATA := XML_DATA();
+        TABLES_LIST    XML_DATA       := XML_DATA();
+        IN_COLUMNS     XML_DATA       := XML_DATA();
         JOIN_CONDITION VARCHAR2(100);
         JOIN_TYPE      VARCHAR2(100);
-        SELECT_QUERY   CLOB := 'SELECT ';
-
-        FUNCTION GET_COLUMN_LIST(in_columns IN XML_DATA) RETURN CLOB IS
-            result CLOB := '';
-
-            BEGIN
-                FOR indx IN 1..in_columns.COUNT
-                LOOP
-                    result := result || in_columns(indx) || ', ';
-                END LOOP;
-
-                result := RTRIM(result, ', ');
-                RETURN result;
-            END GET_COLUMN_LIST;
-
+        SELECT_QUERY   VARCHAR2(1000) := 'SELECT ';
     BEGIN
         IF XML_STRING IS NULL THEN
             RETURN NULL;
         END IF;
-
         TABLES_LIST := EXTRACT_VALUES(XML_STRING, 'Operation/Tables/Table');
         IN_COLUMNS := EXTRACT_VALUES(XML_STRING, 'Operation/Columns/Column');
-
-        SELECT_QUERY := SELECT_QUERY || GET_COLUMN_LIST(IN_COLUMNS);
-        SELECT_QUERY := SELECT_QUERY || ' FROM ' || TABLES_LIST(1);
-
-        FOR indx IN 2..TABLES_LIST.COUNT
-        LOOP
-            JOIN_TYPE := EXTRACTVALUE(XMLTYPE(XML_STRING),
-                                      'Operation/Joins/Join[' || (indx - 1) || ']/Type');
-            JOIN_CONDITION := EXTRACTVALUE(XMLTYPE(XML_STRING),
-                                           'Operation/Joins/Join[' || (indx - 1) || ']/Condition');
-            SELECT_QUERY := SELECT_QUERY || ' ' || JOIN_TYPE || ' ' || TABLES_LIST(indx) || ' ON ' || JOIN_CONDITION;
-        END LOOP;
-
-        SELECT_QUERY := SELECT_QUERY || HANDLER_WHERE(XML_STRING);
-
+        SELECT_QUERY := SELECT_QUERY
+            || ' '
+            || IN_COLUMNS(1);
+        FOR INDX IN 2..IN_COLUMNS.COUNT
+            LOOP
+                SELECT_QUERY := SELECT_QUERY
+                    || ', '
+                    || IN_COLUMNS(INDX);
+            END LOOP;
+        SELECT_QUERY := SELECT_QUERY
+            || ' FROM '
+            || TABLES_LIST(1);
+        FOR INDX IN 2..TABLES_LIST.COUNT
+            LOOP
+                SELECT EXTRACTVALUE(XMLTYPE(XML_STRING),
+                                    'Operation/Joins/Join' || '[' || (INDX - 1) || ']/Type')
+                INTO JOIN_TYPE
+                FROM DUAL;
+                SELECT EXTRACTVALUE(XMLTYPE(XML_STRING),
+                                    'Operation/Joins/Join' || '[' || (INDX - 1) || ']/Condition')
+                INTO JOIN_CONDITION
+                FROM DUAL;
+                SELECT_QUERY := SELECT_QUERY
+                    || ' '
+                    || JOIN_TYPE
+                    || ' '
+                    || TABLES_LIST(INDX)
+                    || ' ON '
+                    || JOIN_CONDITION;
+            END LOOP;
+        SELECT_QUERY := SELECT_QUERY
+            || HANDLER_WHERE(XML_STRING);
         RETURN SELECT_QUERY;
     END HANDLER_OPERATOR;
 
-
     FUNCTION HANDLER_WHERE(XML_STRING IN VARCHAR2) RETURN VARCHAR2 IS
         WHERE_FILTER        XML_DATA       := XML_DATA();
-        WHERE_CLAUSE        VARCHAR2(1000) := ' WHERE ';
+        WHERE_CLOUSE        VARCHAR2(1000) := ' WHERE ';
+        CONDITION_BODY      VARCHAR2(100);
+        CONDITION_OPERATOR  VARCHAR2(100);
+        ARGUMENTS           VARCHAR2(1000);
+        ARGUMENTS_START     VARCHAR2(10);
+        ARGUMENTS_END       VARCHAR2(10);
+        ARGUMENTS_SEPARATOR VARCHAR2(10);
+        XML_VALUES          XML_DATA       := XML_DATA();
+        SUB_QUERY           VARCHAR2(1000);
+        SUB_QUERY1          VARCHAR2(1000);
+        SEPARATOR           VARCHAR2(100);
         I                   NUMBER         := 1;
     BEGIN
         WHERE_FILTER := EXTRACT_WITH_SUBNODES(XML_STRING, 'Operation/Where/Conditions/Condition');
+        FOR I IN 1..WHERE_FILTER.COUNT
+            LOOP
+                SELECT EXTRACTVALUE(XMLTYPE(WHERE_FILTER(I)),
+                                    'Condition/Body')
+                INTO CONDITION_BODY
+                FROM DUAL;
+                SELECT EXTRACTVALUE(XMLTYPE(WHERE_FILTER(I)),
+                                    'Condition/Operator')
+                INTO CONDITION_OPERATOR
+                FROM DUAL;
+                SELECT EXTRACT(XMLTYPE(WHERE_FILTER(I)),
+                               'Condition/Arguments').GETSTRINGVAL()
+                INTO ARGUMENTS
+                FROM DUAL;
 
-        FOR I IN 1..WHERE_FILTER.COUNT LOOP
-            WHERE_CLAUSE := WHERE_CLAUSE || TRIM(EXTRACTVALUE(WHERE_FILTER(I), '/Condition/Body')) || ' '
-                || TRIM(EXTRACTVALUE(WHERE_FILTER(I), '/Condition/Operator')) || ' ';
+                SELECT EXTRACT(XMLTYPE(WHERE_FILTER(I)),
+                               'Condition/Operation').GETSTRINGVAL()
+                INTO SUB_QUERY
+                FROM DUAL;
 
-            IF (EXISTSNODE(WHERE_FILTER(I), '/Condition/Arguments/Argument')) THEN
-                WHERE_CLAUSE := WHERE_CLAUSE || '(';
+                SELECT EXTRACTVALUE(XMLTYPE(WHERE_FILTER(I)),
+                                    'Condition/ArgumentsStart')
+                INTO ARGUMENTS_START
+                FROM DUAL;
 
-                FOR ARGUMENT IN (
-                    SELECT EXTRACTVALUE(VALUE(arg), '.')
-                    FROM TABLE(XMLSEQUENCE(EXTRACT(WHERE_FILTER(I), '/Condition/Arguments/Argument'))) arg
-                ) LOOP
-                    WHERE_CLAUSE := WHERE_CLAUSE || ARGUMENT || ', ';
-                END LOOP;
+                SELECT EXTRACTVALUE(XMLTYPE(WHERE_FILTER(I)),
+                                    'Condition/ArgumentsEnd')
+                INTO ARGUMENTS_END
+                FROM DUAL;
 
-                WHERE_CLAUSE := TRIM(TRAILING ', ' FROM WHERE_CLAUSE) || ') ';
-            END IF;
+                SELECT EXTRACTVALUE(XMLTYPE(WHERE_FILTER(I)),
+                                    'Condition/ArgumentsSeparator')
+                INTO ARGUMENTS_SEPARATOR
+                FROM DUAL;
+                SELECT EXTRACTVALUE(XMLTYPE(WHERE_FILTER(I)),
+                                    'Condition/Separator')
+                INTO SEPARATOR
+                FROM DUAL;
+                SUB_QUERY1 := HANDLER_OPERATOR(SUB_QUERY);
+                IF SUB_QUERY1 IS NOT NULL THEN
+                    SUB_QUERY1 := '('
+                        || SUB_QUERY1
+                        || ')';
+                END IF;
 
-            IF (EXISTSNODE(WHERE_FILTER(I), '/Condition/Operation')) THEN
-                WHERE_CLAUSE := WHERE_CLAUSE || HANDLER_OPERATOR(EXTRACTVALUE(WHERE_FILTER(I), '/Condition/Operation')) || ' ';
-            END IF;
+                WHERE_CLOUSE := WHERE_CLOUSE
+                    || ' '
+                    || TRIM(CONDITION_BODY)
+                    || ' '
+                    || TRIM(CONDITION_OPERATOR);
 
-            IF (EXISTSNODE(WHERE_FILTER(I), '/Condition/Separator')) THEN
-                WHERE_CLAUSE := WHERE_CLAUSE || TRIM(EXTRACTVALUE(WHERE_FILTER(I), '/Condition/Separator')) || ' ';
-            END IF;
-        END LOOP;
+                IF ARGUMENTS IS NOT NULL THEN
+                    XML_VALUES := EXTRACT_VALUES(ARGUMENTS, 'Arguments/Argument');
+                    WHERE_CLOUSE := WHERE_CLOUSE
+                        || ARGUMENTS_START
+                        || ' '
+                        || XML_VALUES(1);
+                    FOR I IN 2..XML_VALUES.COUNT
+                        LOOP
+                            WHERE_CLOUSE := WHERE_CLOUSE
+                                || ' '
+                                || ARGUMENTS_SEPARATOR
+                                || ' '
+                                || XML_VALUES(I);
+                        END LOOP;
+                    WHERE_CLOUSE := WHERE_CLOUSE
+                        || ' ' || ARGUMENTS_END || ' ';
+                END IF;
+                WHERE_CLOUSE := WHERE_CLOUSE
+                    || SUB_QUERY1
+                    || ' '
+                    || SEPARATOR
+                    || ' ';
+            END LOOP;
 
         IF WHERE_FILTER.COUNT = 0 THEN
             RETURN ' ';
         END IF;
-
-        RETURN WHERE_CLAUSE;
+        RETURN WHERE_CLOUSE;
     END HANDLER_WHERE;
-
 
 
     FUNCTION HANDLER_SELECT(XML_STRING IN VARCHAR2) RETURN SYS_REFCURSOR IS
@@ -115,41 +172,43 @@ CREATE OR REPLACE PACKAGE BODY XML_PARSING AS
         TABLE_NAME             VARCHAR2(100);
         XML_COLUMNS            VARCHAR2(200);
     BEGIN
-        SELECT EXTRACT(XMLTYPE(XML_STRING), 'Operation/Values').GETSTRINGVAL()
+        SELECT EXTRACT(XMLTYPE(XML_STRING),
+                       'Operation/Values').GETSTRINGVAL()
         INTO VALUES_TO_INSERT
         FROM DUAL;
-
-        SELECT EXTRACTVALUE(XMLTYPE(XML_STRING), 'Operation/Table')
+        SELECT EXTRACTVALUE(XMLTYPE(XML_STRING),
+                            'Operation/Table')
         INTO TABLE_NAME
         FROM DUAL;
-
-        XML_COLUMNS := '(' || CONCAT_STRING(EXTRACT_VALUES(XML_STRING, 'Operation/Columns/Column'), ',') || ')';
-
-        INSERT_QUERY := 'INSERT INTO ' || TABLE_NAME || XML_COLUMNS;
-
+        XML_COLUMNS := '('
+            || CONCAT_STRING(EXTRACT_VALUES(XML_STRING, 'Operation/Columns/Column'), ',')
+            || ')';
+        INSERT_QUERY := 'INSERT INTO '
+            || TABLE_NAME
+            || XML_COLUMNS;
         IF VALUES_TO_INSERT IS NOT NULL THEN
             XML_VALUES := EXTRACT_VALUES(VALUES_TO_INSERT, 'Values/Value');
-            INSERT_QUERY := INSERT_QUERY || ' VALUES (';
-
-            FOR I IN 1..XML_VALUES.COUNT LOOP
-                IF I > 1 THEN
-                    INSERT_QUERY := INSERT_QUERY || ', ';
-                END IF;
-                INSERT_QUERY := INSERT_QUERY || XML_VALUES(I);
-            END LOOP;
-
-            INSERT_QUERY := INSERT_QUERY || ')';
-
+            INSERT_QUERY := INSERT_QUERY
+                || ' VALUES'
+                || '('
+                || XML_VALUES(1)
+                || ') ';
+            FOR I IN 2..XML_VALUES.COUNT
+                LOOP
+                    INSERT_QUERY := INSERT_QUERY
+                        || ',('
+                        || XML_VALUES(I)
+                        || ') ';
+                END LOOP;
         ELSE
             SELECT EXTRACT(XMLTYPE(XML_STRING), 'Operation/Operation').GETSTRINGVAL()
             INTO SELECT_QUERY_TO_INSERT
             FROM DUAL;
-            INSERT_QUERY := INSERT_QUERY || HANDLER_OPERATOR(SELECT_QUERY_TO_INSERT);
+            INSERT_QUERY := INSERT_QUERY
+                || HANDLER_OPERATOR(SELECT_QUERY_TO_INSERT);
         END IF;
-
         RETURN INSERT_QUERY;
     END;
-
 
     FUNCTION HANDLER_UPDATE(XML_STRING IN VARCHAR2) RETURN VARCHAR2 IS
         SET_COLLECTION     XML_DATA       := XML_DATA();
@@ -229,7 +288,6 @@ CREATE OR REPLACE PACKAGE BODY XML_PARSING AS
                     || COL_NAME
                     || ' '
                     || COL_TYPE
-                    || ' '
                     || CONCAT_STRING(COL_CONSTRAINTS, '
             ');
                 IF I != TABLE_COLUMNS.COUNT THEN

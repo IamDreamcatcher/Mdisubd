@@ -79,3 +79,100 @@ BEGIN
 
     EXECUTE IMMEDIATE 'ALTER TABLE ' || p_table_name || ' ENABLE ALL TRIGGERS';
 END;
+
+
+CREATE OR REPLACE DIRECTORY my_dir AS 'D:\';
+
+create or replace procedure create_report(t_begin in timestamp, t_end in timestamp)
+as
+    v_result varchar2(4000);
+    i_count  number;
+    u_count  number;
+    d_count  number;
+    my_file  UTL_FILE.FILE_TYPE;
+begin
+
+    v_result := '<h1>actors:</h1>' || CHR(10);
+
+    select count(*)
+    into u_count
+    from actors_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'UPDATE';
+
+    select count(*)
+    into i_count
+    from actors_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'INSERT';
+
+    select count(*)
+    into d_count
+    from actors_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'DELETE';
+
+    i_count := i_count - u_count;
+    d_count := d_count - u_count;
+
+    v_result := v_result || '<h2 style="color:green">   Insert: ' || i_count || '</h2>' || CHR(10) ||
+                '<h2 style="color:orange">   Update: ' || u_count || '</h2>' || CHR(10) ||
+                '<h2 style="color:red">   Delete: ' || d_count || '</h2>' || CHR(10);
+
+    select count(*)
+    into u_count
+    from producers_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'UPDATE';
+
+    select count(*)
+    into i_count
+    from producers_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'INSERT';
+
+    select count(*)
+    into d_count
+    from producers_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'DELETE';
+
+    i_count := i_count - u_count;
+    d_count := d_count - u_count;
+
+    v_result := v_result || '<h1>producers:</h1>' || CHR(10) ||
+                '<h2 style="color:green">   Insert: ' || i_count || '</h2>' || CHR(10) ||
+                '<h2 style="color:orange">   Update: ' || u_count || '</h2>' || CHR(10) ||
+                '<h2 style="color:red">   Delete: ' || d_count || '</h2>' || CHR(10);
+
+    select count(*)
+    into u_count
+    from films_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'UPDATE';
+
+    select count(*)
+    into i_count
+    from films_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'INSERT';
+
+    select count(*)
+    into d_count
+    from films_history
+    where CHANGE_DATE between t_begin and t_end
+      and CHANGE_TYPE = 'DELETE';
+
+    i_count := i_count - u_count;
+    d_count := d_count - u_count;
+
+    v_result := v_result || '<h1>films:</h1>' || CHR(10) ||
+                '<h2 style="color:green">   Insert: ' || i_count || '</h2>' || CHR(10) ||
+                '<h2 style="color:orange">   Update: ' || u_count || '</h2>' || CHR(10) ||
+                '<h2 style="color:red">   Delete: ' || d_count || '</h2>' || CHR(10);
+    my_file := UTL_FILE.FOPEN('MY_DIR', 'report.html', 'w');
+    UTL_FILE.PUT_LINE(my_file, v_result);
+    UTL_FILE.FCLOSE(my_file);
+    DBMS_OUTPUT.PUT_LINE(v_result);
+
+end;
